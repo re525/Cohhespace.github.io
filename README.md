@@ -176,3 +176,97 @@ Cohhespace is great
   </script>
 </body>
 </html>
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({ secret: 'secret-key', resave: false, saveUninitialized: true }));
+
+const users = {}; // In-memory user storage (use a database in production)
+
+// Serve static files
+app.use(express.static('public'));
+
+// Signup route
+app.post('/signup', (req, res) => {
+  const { username, password } = req.body;
+  if (users[username]) {
+    return res.status(400).send('Username already exists!');
+  }
+  users[username] = { password, theme: 'space' }; // Default theme
+  res.send('Signup successful!');
+});
+
+// Login route
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = users[username];
+  if (!user || user.password !== password) {
+    return res.status(400).send('Invalid credentials!');
+  }
+  req.session.user = username;
+  res.send('Login successful!');
+});
+
+// Update theme route
+app.post('/theme', (req, res) => {
+  const { theme } = req.body;
+  const user = users[req.session.user];
+  if (user) {
+    user.theme = theme;
+    return res.send('Theme updated!');
+  }
+  res.status(401).send('Unauthorized!');
+});
+
+// Get user data
+app.get('/me', (req, res) => {
+  const user = users[req.session.user];
+  if (user) {
+    return res.json(user);
+  }
+  res.status(401).send('Unauthorized!');
+});
+
+const PORT = 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+body.space
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  text-align: center;
+  max-width: 600px;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+body.space {
+  background: url('space.jpg') no-repeat center center / cover;
+  color: white;
+}
+
+body.gothic {
+  background: black;
+  color: white;
+}
+
+body.dark {
+  background: #121212;
+  color: grey;
+}
+
+body.blue-ciel {
+  background: linear-gradient(to bottom, #87CEEB, #4682B4);
+  color: white;
+}
