@@ -417,3 +417,54 @@ app.get('/games', (req, res) => {
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
+<!-- Signup Form -->
+<input type="email" id="signup-email" placeholder="Email">
+<input type="password" id="signup-password" placeholder="Password">
+<button onclick="signUp(document.getElementById('signup-email').value, document.getElementById('signup-password').value)">Sign Up</button>
+
+<!-- Login Form -->
+<input type="email" id="login-email" placeholder="Email">
+<input type="password" id="login-password" placeholder="Password">
+<button onclick="signIn(document.getElementById('login-email').value, document.getElementById('login-password').value)">Log In</button>
+<!-- Add this to your HTML file, inside <head> -->
+<script type="module">
+  // Import the functions you need from the SDKs
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Example: sign up user
+  function signUp(email, password) {
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        alert("Signup successful!");
+      })
+      .catch(error => {
+        alert(error.message);
+      });
+  }
+
+  // Example: sign in user
+  function signIn(email, password) {
+    signInWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        alert("Login successful!");
+      })
+      .catch(error => {
+        alert(error.message);
+      });
+  }
+
+  // Hook these functions to your login/signup forms
+</script>
