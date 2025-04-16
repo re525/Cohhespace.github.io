@@ -270,3 +270,150 @@ body.blue-ciel {
   background: linear-gradient(to bottom, #87CEEB, #4682B4);
   color: white;
 }
+import React, { useState } from 'react';
+import axios from 'axios';
+
+function App() {
+    const [token, setToken] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [question, setQuestion] = useState('');
+    const [aiResponse, setAiResponse] = useState('');
+    const [file, setFile] = useState(null);
+
+    const register = async () => {
+        await axios.post('/register', { username, password });
+        alert('User registered!');
+    };
+
+    const login = async () => {
+        const res = await axios.post('/login', { username, password });
+        setToken(res.data.token);
+        alert('Logged in successfully!');
+    };
+
+    const askAI = async () => {
+        const res = await axios.post('/ask-ai', { question }, {
+            headers: { Authorization: token }
+        });
+        setAiResponse(res.data.answer);
+    };
+
+    const uploadFile = async () => {
+        const formData = new FormData();
+        formData.append('file', file);
+        await axios.post('/upload', formData, {
+            headers: {
+                Authorization: token,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        alert('File uploaded!');
+    };
+
+    return (
+        <div>
+            <h1>Social AI Platform</h1>
+            <div>
+                <h2>Register/Login</h2>
+                <input placeholder="Username" onChange={e => setUsername(e.target.value)} />
+                <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
+                <button onClick={register}>Register</button>
+                <button onClick={login}>Login</button>
+            </div>
+            <div>
+                <h2>AI Interaction</h2>
+                <textarea placeholder="Ask a question..." onChange={e => setQuestion(e.target.value)} />
+                <button onClick={askAI}>Ask AI</button>
+                <p>AI says: {aiResponse}</p>
+            </div>
+            <div>
+                <h2>File Upload</h2>
+                <input type="file" onChange={e => setFile(e.target.files[0])} />
+                <button onClick={uploadFile}>Upload</button>
+            </div>
+            <div>
+                <h2>Games</h2>
+                <ul>
+                    <li>Game 1</li>
+                    <li>Game 2</li>
+                    <li>Game 3</li>
+                    <li>Game 4</li>
+                    <li>Game 5</li>
+                </ul>
+            </div>
+        </div>
+    );
+}
+
+export default App;
+const express = require('express');
+const multer = require('multer');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const app = express();
+const port = 3000;
+
+app.use(bodyParser.json());
+
+// Mock database
+let users = [];
+let posts = [];
+
+// JWT secret key
+const JWT_SECRET = "your_jwt_secret";
+
+// Middleware for authentication
+function authenticateToken(req, res, next) {
+    const token = req.headers['authorization'];
+    if (!token) return res.sendStatus(401);
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
+        next();
+    });
+}
+
+// User Registration
+app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    users.push({ username, password: hashedPassword });
+    res.status(201).send({ message: "User registered successfully" });
+});
+
+// User Login
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username);
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).send({ error: "Invalid credentials" });
+    }
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+});
+
+// AI Interaction
+app.post('/ask-ai', authenticateToken, (req, res) => {
+    const { question } = req.body;
+    // Simple AI placeholder
+    const answer = `AI Response to your question: "${question}"`;
+    res.json({ answer });
+});
+
+// File Upload
+const upload = multer({ dest: 'uploads/' });
+app.post('/upload', authenticateToken, upload.single('file'), (req, res) => {
+    res.send({ message: "File uploaded successfully", file: req.file });
+});
+
+// Placeholder for games
+app.get('/games', (req, res) => {
+    res.json({ games: ["Game 1", "Game 2", "Game 3", "Game 4", "Game 5"] });
+});
+
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});
